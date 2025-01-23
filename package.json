@@ -1,0 +1,20 @@
+{
+  "name": "compass-slack-app",
+  "version": "1.0.0",
+  "description": "An AI bot that will guide you through the stormy seas aboard the Stuurlui ship.",
+  "homepage": "https://github.com/tomdevisser29/compass-slack-bot#readme",
+  "bugs": {
+    "url": "https://github.com/tomdevisser29/compass-slack-bot/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomdevisser29/compass-slack-bot.git"
+  },
+  "license": "ISC",
+  "author": "Tom de Visser",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
