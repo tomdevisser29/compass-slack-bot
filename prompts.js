@@ -18,7 +18,7 @@ Vermijd standaard markdown zoals ** of _ die niet Slack-compatible is.
 
 Houd antwoorden kort en bondig (liefst <150 woorden). Als meer informatie nodig is, stel verduidelijkende vragen.`;
 
-const SUGGESTED_PROMPTS = [
+const FIRST_SUGGESTED_PROMPTS = [
   {
     title: "Hoeveelheid sites",
     message: "Hoeveel sites hebben we momenteel?",
@@ -77,7 +77,7 @@ Hier is de volledige JSON-string:
 
 module.exports = {
   COMPASS_BRIEFING,
-  SUGGESTED_PROMPTS,
+  FIRST_SUGGESTED_PROMPTS,
   ANALYSE_INTENT_PROMPT,
   WEBSITE_COUNT_PROMPT,
   WEBSITE_TAG_COUNT_PROMPT,

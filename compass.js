@@ -1,15 +1,16 @@
 const { Assistant } = require("@slack/bolt");
 const intentionHandler = require("./classes/IntentionHandler");
 const openai = require("./classes/OpenAI");
-const { COMPASS_BRIEFING, SUGGESTED_PROMPTS } = require("./prompts");
+const { COMPASS_BRIEFING, FIRST_SUGGESTED_PROMPTS } = require("./prompts");
 
 // @see https://tools.slack.dev/bolt-js/reference#agents--assistants
 const compass = new Assistant({
   // Responds to new threads.
   threadStarted: async ({ say, setSuggestedPrompts }) => {
     await say("Ahoy! Waar kan ik je mee helpen?");
+
     await setSuggestedPrompts({
-      prompts: SUGGESTED_PROMPTS,
+      prompts: FIRST_SUGGESTED_PROMPTS,
       title: "Hier wat suggesties:",
     });
   },
