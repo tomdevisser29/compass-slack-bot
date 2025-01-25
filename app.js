@@ -4,7 +4,9 @@ const { compass } = require("./compass");
 
 config();
 
-// Initializes the app.
+/**
+ * Initializes your app with your bot token and signing secret.
+ */
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
@@ -13,10 +15,15 @@ const app = new App({
   port: process.env.PORT || 3000,
 });
 
+/**
+ * Sets the app's assistant to Compass.
+ */
 app.assistant(compass);
 
-// Starts the app.
+/**
+ * Starts the app.
+ */
 (async () => {
   await app.start();
-  app.logger.info("⚡️ Bolt app is running!");
+  app.logger.info("⚡️ Compass is awake!");
 })();

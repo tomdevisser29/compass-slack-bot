@@ -1,12 +1,27 @@
+/**
+ * This file returns an instance of the IntentionHandler class, used to
+ * route user questions to the appropriate handler based on the intent
+ * of the question.
+ */
+const openai = require("./OpenAI");
+const mainwp = require("./MainWP");
 const {
   ANALYSE_INTENT_PROMPT,
   COMPASS_BRIEFING,
   WEBSITE_COUNT_PROMPT,
   WEBSITE_TAG_COUNT_PROMPT,
 } = require("../prompts");
-const openai = require("./OpenAI");
-const mainwp = require("./MainWP");
 
+/**
+ * The IntentionHandler class is responsible for routing user questions to
+ * the appropriate handler based on the intent of the question. The intention
+ * is determined by the OpenAI model, which returns a JSON object based on
+ * the app's prompts.
+ *
+ * E.g. (see prompts.js):
+ * 1. "Hoeveel websites hebben we op dit moment?"
+ *    -> {"intent": "website_count"}
+ */
 class IntentionHandler {
   intentRouter = async (userQuestion) => {
     const intentObject = await this.analyseIntent(userQuestion);
@@ -37,6 +52,10 @@ class IntentionHandler {
           (tag) => tag.name === intentObject.tag
         );
 
+        if (!tag) {
+          return null;
+        }
+
         const tagCountResponse = await openai.chat.completions.create({
           model: "gpt-4o-mini",
           n: 1,
@@ -61,12 +80,7 @@ class IntentionHandler {
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       n: 1,
-      messages: [
-        {
-          role: "system",
-          content: prompt,
-        },
-      ],
+      messages: [{ role: "system", content: prompt }],
     });
 
     const intentObject = response.choices[0].message.content;

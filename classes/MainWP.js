@@ -1,6 +1,9 @@
 const { config } = require("dotenv");
 config();
 
+/**
+ * The MainWP class lets you interact with the MainWP API.
+ */
 class MainWP {
   constructor() {
     this.baseUrl = "https://mainwp.stuurlui.dev/wp-json/mainwp/v2";

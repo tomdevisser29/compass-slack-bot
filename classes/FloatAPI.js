@@ -1,6 +1,9 @@
 const { config } = require("dotenv");
 config();
 
+/**
+ * The FloatAPI class lets you interact with the Float API.
+ */
 class FloatAPI {
   constructor() {
     this.baseUrl = "https://api.float.com/v3";
@@ -13,7 +16,10 @@ class FloatAPI {
   }
 
   async getPeopleReport() {
-    // set startDate and endDate from now till 7 days from now
+    /**
+     * The start and end dates are now hardcoded, it would be nice to make
+     * these dynamic in the intention handler based on the user's question.
+     */
     const startDate = new Date();
     const endDate = new Date();
     endDate.setDate(startDate.getDate() + 7);
