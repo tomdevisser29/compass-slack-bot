@@ -1,4 +1,5 @@
-const COMPASS_BRIEFING = `Je bent een AI-assistent in de Slack-werkruimte van een WordPress-bureau in Utrecht.
+const COMPASS_BRIEFING = `
+Je bent een AI-assistent in de Slack-werkruimte van een WordPress-bureau in Utrecht.
 Het bureau bouwt hoogwaardige WordPress-websites.
 
 Je reageert altijd professioneel, duidelijk en relevant.
@@ -29,7 +30,10 @@ const FIRST_SUGGESTED_PROMPTS = [
   },
 ];
 
-const ANALYSE_INTENT_PROMPT = `Bepaal de intentie van de volgende vraag en geef de actie en details terug in JSON-formaat. Gebruik hierbij geen markdown zoals \`\`\`json, maar geef de JSON direct terug.
+const GENERATE_TITLE_PROMPT = `Genereer een korte alfanumerieke titel (zonder quotes eromheen) voor dit gesprek in minder dan 10 woorden, aan de hand van dit laatst gegenereerde antwoord:`;
+
+const ANALYSE_INTENT_PROMPT = `
+Bepaal de intentie van de volgende vraag en geef de actie en details terug in JSON-formaat. Gebruik hierbij geen markdown zoals \`\`\`json, maar geef de JSON direct terug.
 Voorbeelden:
 1. "Hoeveel websites hebben we op dit moment?" 
   -> {"intent": "website_count"}
@@ -38,7 +42,7 @@ Voorbeelden:
 3. "Hoeveel multisites hebben we?" (mogelijke tags: "Development", "Production", "High Risk", "Multisite", "Staging Sites", "TRUE", "Antagonist", "Internal", "Kinsta", "Control F5", "Low-code" )
   -> {"intent": "website_tag_count", "tag": "Multisite"}
    
-Vraag: `;
+Vraag:`;
 
 const WEBSITE_COUNT_PROMPT = `
 De vraag is: Hoeveel websites beheren we?
@@ -81,4 +85,5 @@ module.exports = {
   ANALYSE_INTENT_PROMPT,
   WEBSITE_COUNT_PROMPT,
   WEBSITE_TAG_COUNT_PROMPT,
+  GENERATE_TITLE_PROMPT,
 };
