@@ -22,7 +22,7 @@ const compass = new Assistant({
    * The `threadStarted` event is triggered when a new thread is created.
    */
   threadStarted: async ({ say, setSuggestedPrompts }) => {
-    await say("Ahoy! Waar kan ik je mee helpen?");
+    await say("Ahoy, waar kan ik je mee helpen?");
 
     await setSuggestedPrompts({
       prompts: FIRST_SUGGESTED_PROMPTS,
