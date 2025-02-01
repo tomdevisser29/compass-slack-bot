@@ -45,12 +45,12 @@ app.command("/kompas", async ({ command, ack, respond }) => {
         blocksKit.addActions({
           elements: [
             blocksKit.addButton({
-              text: "Bedrijfsinformatie ophalen",
+              text: "Bedrijfsinformatie bekijken",
               actionId: "get_company_info",
             }),
             blocksKit.addButton({
-              text: "Laatste tickets ophalen",
-              actionId: "get_latest_tickets",
+              text: "Recente tickets bekijken",
+              actionId: "get_recent_tickets",
             }),
           ],
         }),
@@ -72,7 +72,37 @@ app.action("get_company_info", async ({ body, client, ack, logger }) => {
       callback_id: "get_company_info",
       title: {
         type: "plain_text",
-        text: "Zoek bedrijf",
+        text: "Bedrijfsinformatie",
+      },
+      close: {
+        type: "plain_text",
+        text: "Sluiten",
+      },
+      blocks: [
+        blocksKit.addDispatchInput({
+          blockId: "search_company",
+          actionId: "search_company",
+          label: "Bedrijf zoeken",
+          placeholder: "Vul hier een bedrijfsnaam in",
+        }),
+      ],
+    },
+  };
+
+  await client.views.open(modalOptions);
+});
+
+app.action("get_recent_tickets", async ({ body, client, ack, logger }) => {
+  await ack();
+
+  const modalOptions = {
+    trigger_id: body.trigger_id,
+    view: {
+      type: "modal",
+      callback_id: "get_recent_tickets",
+      title: {
+        type: "plain_text",
+        text: "Recente tickets",
       },
       close: {
         type: "plain_text",
@@ -100,29 +130,46 @@ app.action("search_company", async ({ body, client, ack, logger }) => {
   const hubspotResponse = await hubspot.search(companyName);
 
   if (hubspotResponse.total === 0) {
-    await client.views.update({
-      view_id: body.view.id,
-      view: {
-        type: "modal",
-        callback_id: "get_company_info",
-        title: {
-          type: "plain_text",
-          text: "Zoek bedrijf",
+    const blocks = [
+      blocksKit.addDispatchInput({
+        blockId: "search_company",
+        actionId: "search_company",
+        label: "Bedrijfsnaam zoeken",
+        placeholder: "Vul hier een bedrijfsnaam in",
+        initialValue: companyName,
+      }),
+      blocksKit.addSection({
+        text: "Geen bedrijven gevonden.",
+      }),
+    ];
+
+    if ("get_company_info" === body.view.callback_id) {
+      await client.views.update({
+        view_id: body.view.id,
+        view: {
+          type: "modal",
+          callback_id: "get_company_info",
+          title: {
+            type: "plain_text",
+            text: "Bedrijfsinformatie",
+          },
+          blocks,
         },
-        blocks: [
-          blocksKit.addDispatchInput({
-            blockId: "search_company",
-            actionId: "search_company",
-            label: "Bedrijfsnaam zoeken",
-            placeholder: "Vul hier een bedrijfsnaam in",
-            initialValue: companyName,
-          }),
-          blocksKit.addSection({
-            text: "Geen bedrijven gevonden",
-          }),
-        ],
-      },
-    });
+      });
+    } else if ("get_recent_tickets" === body.view.callback_id) {
+      await client.views.update({
+        view_id: body.view.id,
+        view: {
+          type: "modal",
+          callback_id: "get_recent_tickets",
+          title: {
+            type: "plain_text",
+            text: "Recente tickets",
+          },
+          blocks,
+        },
+      });
+    }
 
     return;
   }
@@ -161,31 +208,54 @@ app.action("search_company", async ({ body, client, ack, logger }) => {
   } else {
     blocks.push(
       blocksKit.addSection({
-        text: "Geen bedrijven gevonden",
+        text: "Geen tickets gevonden",
       })
     );
   }
 
-  await client.views.update({
-    view_id: body.view.id,
-    view: {
-      type: "modal",
-      callback_id: "get_company_info",
-      title: {
-        type: "plain_text",
-        text: "Zoek bedrijf",
+  if ("get_company_info" === body.view.callback_id) {
+    await client.views.update({
+      view_id: body.view.id,
+      view: {
+        type: "modal",
+        callback_id: "get_company_info",
+        title: {
+          type: "plain_text",
+          text: "Bedrijfsinformatie",
+        },
+        blocks,
+        close: {
+          type: "plain_text",
+          text: "Sluiten",
+        },
+        submit: {
+          type: "plain_text",
+          text: "Informatie bekijken",
+        },
       },
-      blocks,
-      close: {
-        type: "plain_text",
-        text: "Sluiten",
+    });
+  } else if ("get_recent_tickets" === body.view.callback_id) {
+    await client.views.update({
+      view_id: body.view.id,
+      view: {
+        type: "modal",
+        callback_id: "get_recent_tickets",
+        title: {
+          type: "plain_text",
+          text: "Recente tickets",
+        },
+        blocks,
+        close: {
+          type: "plain_text",
+          text: "Sluiten",
+        },
+        submit: {
+          type: "plain_text",
+          text: "Tickets bekijken",
+        },
       },
-      submit: {
-        type: "plain_text",
-        text: "Informatie ophalen",
-      },
-    },
-  });
+    });
+  }
 });
 
 /**
@@ -235,6 +305,90 @@ app.view("get_company_info", async ({ ack, body, view, client, logger }) => {
       title: {
         type: "plain_text",
         text: "Bedrijfsinformatie",
+      },
+      blocks,
+    },
+  });
+});
+
+app.view("get_recent_tickets", async ({ ack, body, view, client, logger }) => {
+  await ack();
+
+  const selectedCompanyId =
+    view.state.values.select_company.select_company.selected_option.value;
+
+  const associatedTickets = await hubspot.findLatestTicketsByCompanyId(
+    selectedCompanyId
+  );
+
+  const stageMap = await hubspot.getTicketPipelineStages();
+  const tickets = associatedTickets.results;
+
+  const blocks = [];
+
+  if (0 === tickets.length) {
+    blocks.push(
+      blocksKit.addSection({
+        text: "Geen tickets gevonden.",
+      })
+    );
+  } else {
+    tickets.forEach((ticket, index) => {
+      const { subject, content, createdate, hs_pipeline_stage, id } =
+        ticket.properties;
+
+      blocks.push(
+        blocksKit.addLinkButton({
+          text: `*Onderwerp:* ${subject}`,
+          buttonText: "Bekijk op HubSpot",
+          actionId: "view_ticket",
+          buttonValue: "view_ticket",
+          url: `https://app.hubspot.com/contacts/${process.env.HUBSPOT_PORTAL_ID}/tickets/${id}`,
+        })
+      );
+
+      if (content) {
+        blocks.push(
+          blocksKit.addSection({
+            text: `${content.substring(0, 200)}...`,
+          })
+        );
+      }
+
+      blocks.push(
+        blocksKit.addContext({
+          text: `*Aangemaakt op:* ${new Date(createdate).toLocaleDateString(
+            "nl-NL",
+            { day: "numeric", month: "long", year: "numeric" }
+          )}\n*Status:* ${stageMap[hs_pipeline_stage]}`,
+        })
+      );
+
+      blocks.push(
+        blocksKit.addSection({
+          text: ` `,
+        })
+      );
+
+      // Add a divider unless it's the last ticket
+      if (index < tickets.length - 1) {
+        blocks.push(blocksKit.addDivider());
+      }
+    });
+  }
+
+  await client.views.open({
+    trigger_id: body.trigger_id,
+    view: {
+      type: "modal",
+      callback_id: "company_tickets",
+      close: {
+        type: "plain_text",
+        text: "Sluiten",
+      },
+      title: {
+        type: "plain_text",
+        text: "Recente tickets",
       },
       blocks,
     },

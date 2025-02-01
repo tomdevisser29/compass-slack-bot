@@ -20,6 +20,33 @@ class BlockKitBuilder {
     };
   }
 
+  addDivider() {
+    return {
+      type: "divider",
+    };
+  }
+
+  addLinkButton({ text, buttonText, url, buttonValue, actionId }) {
+    return {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text,
+      },
+      accessory: {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: buttonText,
+          emoji: true,
+        },
+        value: buttonValue,
+        url,
+        action_id: actionId,
+      },
+    };
+  }
+
   addButton({ text, actionId }) {
     return {
       type: "button",
