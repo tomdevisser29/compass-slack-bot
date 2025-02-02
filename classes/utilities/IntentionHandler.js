@@ -3,14 +3,14 @@
  * route user questions to the appropriate handler based on the intent
  * of the question.
  */
-const openai = require("./OpenAI");
-const mainwp = require("./MainWP");
+const openai = require("../apis/OpenAI");
+const mainwp = require("../apis/MainWP");
 const {
   ANALYSE_INTENT_PROMPT,
   COMPASS_BRIEFING,
   WEBSITE_COUNT_PROMPT,
   WEBSITE_TAG_COUNT_PROMPT,
-} = require("../prompts");
+} = require("../../prompts");
 
 /**
  * The IntentionHandler class is responsible for routing user questions to

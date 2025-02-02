@@ -5,9 +5,9 @@
  */
 
 const { Assistant } = require("@slack/bolt");
-const blockKitBuilder = require("./classes/BlockKitBuilder");
-const intentionHandler = require("./classes/IntentionHandler");
-const openai = require("./classes/OpenAI");
+const blockKitBuilder = require("./classes/utilities/BlockKitBuilder");
+const intentionHandler = require("./classes/utilities/IntentionHandler");
+const openai = require("./classes/apis/OpenAI");
 const {
   COMPASS_BRIEFING,
   FIRST_SUGGESTED_PROMPTS,

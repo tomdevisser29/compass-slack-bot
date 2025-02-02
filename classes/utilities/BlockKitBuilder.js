@@ -47,6 +47,16 @@ class BlockKitBuilder {
     };
   }
 
+  addWhitespace() {
+    return {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: " ",
+      },
+    };
+  }
+
   addButton({ text, actionId }) {
     return {
       type: "button",
