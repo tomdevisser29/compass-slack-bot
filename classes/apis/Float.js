@@ -15,6 +15,50 @@ class Float {
     };
   }
 
+  async getBudgetInfo(projectId) {
+    const fields = [
+      "id",
+      "name",
+      "budget_type",
+      "budget_total",
+      "budget_priority",
+    ];
+
+    const queryParams = new URLSearchParams({
+      project_id: projectId,
+      fields: fields.join(","),
+    });
+
+    const url = `${this.baseUrl}/projects?${queryParams.toString()}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
+
+    return await response.json();
+  }
+
+  async getProjects() {
+    const fields = ["project_id", "name", "project_manager"];
+
+    const queryParams = new URLSearchParams({
+      "per-page": 100,
+      active: 1,
+      nonBillable: 0,
+      fields: fields.join(","),
+      sort: "-modified",
+    });
+
+    const url = `${this.baseUrl}/projects?${queryParams.toString()}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
+
+    return response.json();
+  }
+
   async getPeopleReport() {
     /**
      * The start and end dates are now hardcoded, it would be nice to make

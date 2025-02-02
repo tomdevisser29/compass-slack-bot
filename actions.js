@@ -4,6 +4,45 @@ const float = require("./classes/apis/Float");
 
 function registerActions(app) {
   /**
+   * This action is triggered when the user wants to get information about a project.
+   */
+  app.action("get_project_manager", async ({ body, client, ack, logger }) => {
+    await ack();
+
+    const blocks = [];
+
+    const allProjects = await float.getProjects();
+
+    const options = allProjects.map((project) => ({
+      text: {
+        type: "plain_text",
+        text: project.name,
+      },
+      value: project.project_id.toString(),
+    }));
+
+    blocks.push(
+      blocksKit.addSelectInput({
+        blockId: "select_project",
+        actionId: "select_project",
+        label: "Projecten",
+        placeholder: "Selecteer een project",
+        options,
+      })
+    );
+
+    const modalOptions = blocksKit.createModal({
+      triggerId: body.trigger_id,
+      callbackId: "get_project_manager",
+      title: "Projectmanager opzoeken",
+      blocks,
+      submitText: "Projectmanager bekijken",
+    });
+
+    await client.views.open(modalOptions);
+  });
+
+  /**
    * This action is triggered when the user wants to get information about a company.
    */
   app.action("get_company_info", async ({ body, client, ack, logger }) => {
@@ -33,7 +72,7 @@ function registerActions(app) {
   /**
    * This action is triggered when the user wants to get the recent tickets of a company.
    */
-  app.action("get_recent_tickets", async ({ body, client, ack, logger }) => {
+  app.action("get_recent_tickets", async ({ body, client, ack }) => {
     await ack();
 
     const blocks = [];

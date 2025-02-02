@@ -57,8 +57,8 @@ class BlockKitBuilder {
     };
   }
 
-  createModal({ triggerId, callbackId, title, blocks }) {
-    return {
+  createModal({ triggerId, callbackId, title, blocks, submitText = "" }) {
+    const modalOptions = {
       trigger_id: triggerId,
       view: {
         type: "modal",
@@ -74,15 +74,18 @@ class BlockKitBuilder {
         blocks,
       },
     };
+
+    if ("" !== submitText) {
+      modalOptions.view.submit = {
+        type: "plain_text",
+        text: submitText,
+      };
+    }
+
+    return modalOptions;
   }
 
-  updateModal({
-    viewId,
-    callbackId,
-    title,
-    blocks,
-    submitText = "Bevestigen",
-  }) {
+  updateModal({ viewId, callbackId, title, blocks, submitText = "" }) {
     return {
       view_id: viewId,
       view: {

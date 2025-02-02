@@ -2,46 +2,54 @@ const blocksKit = require("./classes/utilities/BlockKitBuilder");
 
 function registerCommands(app) {
   /**
-   * Registers the /kompas command, which is used to interact with Compass.
+   * Registers the /kompas-hubspot command, which is used to interact with HubSpot.
    */
-  app.command("/kompas", async ({ command, ack, respond }) => {
+  app.command("/kompas-hubspot", async ({ ack, respond }) => {
     await ack();
 
-    // TODO: Implement the /kompas help command.
-    if (!command.text) {
-      return await respond(
-        "Probeer `/kompas help` om te zien waarmee ik je kan helpen."
-      );
-    }
+    const blocks = [
+      blocksKit.addSection({
+        text: "Wat wil je doen met HubSpot?",
+      }),
+      blocksKit.addActions({
+        elements: [
+          blocksKit.addButton({
+            text: "Bedrijfsinformatie bekijken",
+            actionId: "get_company_info",
+          }),
+          blocksKit.addButton({
+            text: "Recente tickets bekijken",
+            actionId: "get_recent_tickets",
+          }),
+        ],
+      }),
+    ];
 
-    const blocks = [];
+    return await respond({
+      blocks,
+    });
+  });
 
-    /**
-     * If the user types "hubspot", show the HubSpot options.
-     */
-    switch (command.text.trim().toLowerCase()) {
-      case "hubspot":
-        blocks.push(
-          blocksKit.addSection({
-            text: "Wat wil je doen met HubSpot?",
-          })
-        );
-        blocks.push(
-          blocksKit.addActions({
-            elements: [
-              blocksKit.addButton({
-                text: "Bedrijfsinformatie bekijken",
-                actionId: "get_company_info",
-              }),
-              blocksKit.addButton({
-                text: "Recente tickets bekijken",
-                actionId: "get_recent_tickets",
-              }),
-            ],
-          })
-        );
-        break;
-    }
+  /**
+   * Registers the /kompas-projecten command, which is used to retrieve
+   * information about our projects.
+   */
+  app.command("/kompas-projecten", async ({ ack, respond }) => {
+    await ack();
+
+    const blocks = [
+      blocksKit.addSection({
+        text: "Wat wil je weten over onze projecten?",
+      }),
+      blocksKit.addActions({
+        elements: [
+          blocksKit.addButton({
+            text: "Projectmanager opzoeken",
+            actionId: "get_project_manager",
+          }),
+        ],
+      }),
+    ];
 
     return await respond({
       blocks,

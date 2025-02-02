@@ -1,7 +1,38 @@
 const blocksKit = require("./classes/utilities/BlockKitBuilder");
 const hubspot = require("./classes/apis/Hubspot");
+const float = require("./classes/apis/Float");
 
 function registerViews(app) {
+  /**
+   * This view is triggered whe the user wants to see the PM of a project.
+   */
+  app.view("get_project_manager", async ({ ack, body, view, client }) => {
+    await ack();
+
+    const selectedProjectId =
+      view.state.values.select_project.select_project.selected_option.value;
+
+    const project = await float.getProjectById(selectedProjectId);
+
+    const projectManagerId = project.project_manager;
+    const projectManager = await float.getAccountById(projectManagerId);
+
+    const blocks = [
+      blocksKit.addSection({
+        text: `*Project:* ${project.name}\n*Projectmanager:* <@${projectManager.id}>\n*E-mail:* ${projectManager.email}`,
+      }),
+    ];
+
+    const modalOptions = blocksKit.createModal({
+      triggerId: body.trigger_id,
+      callbackId: "project_manager",
+      title: "Projectmanager",
+      blocks,
+    });
+
+    await client.views.open(modalOptions);
+  });
+
   /**
    * This view is triggered when the user wants to get information about a company.
    */
