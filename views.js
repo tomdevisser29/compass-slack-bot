@@ -17,9 +17,15 @@ function registerViews(app) {
     const projectManagerId = project.project_manager;
     const projectManager = await float.getAccountById(projectManagerId);
 
+    const slackUser = await client.users.lookupByEmail({
+      email: projectManager.email,
+    });
+
+    const projectManagerSlackId = slackUser.user.id;
+
     const blocks = [
       blocksKit.addSection({
-        text: `*Project:* ${project.name}\n*Projectmanager:* <@${projectManager.id}>\n*E-mail:* ${projectManager.email}`,
+        text: `*Project:* ${project.name}\n*Projectmanager:* <@${projectManagerSlackId}>\n*E-mail:* ${projectManager.email}`,
       }),
     ];
 
