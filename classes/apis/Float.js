@@ -135,10 +135,11 @@ class Float {
   }
 
   async getProjectById(projectId) {
-    const fields = ["name", "project_manager"];
+    const fields = ["name", "project_manager", "project_team"];
 
     const queryParams = new URLSearchParams({
       fields: fields.join(","),
+      expand: "project_team",
     });
 
     const url = `${
@@ -160,6 +161,22 @@ class Float {
     });
 
     const url = `${this.baseUrl}/tasks/${taskId}?${queryParams.toString()}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.defaultHeaders,
+    });
+
+    return response.json();
+  }
+
+  async getPeopleById(personId) {
+    const fields = ["name", "email"];
+
+    const queryParams = new URLSearchParams({
+      fields: fields.join(","),
+    });
+
+    const url = `${this.baseUrl}/people/${personId}?${queryParams.toString()}`;
     const response = await fetch(url, {
       method: "GET",
       headers: this.defaultHeaders,

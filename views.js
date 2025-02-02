@@ -4,6 +4,77 @@ const float = require("./classes/apis/Float");
 
 function registerViews(app) {
   /**
+   * This view is triggered when the user wants to get the team working on a project.
+   */
+  app.view("get_project_team", async ({ ack, body, view, client }) => {
+    await ack();
+
+    const blocks = [];
+
+    const selectedProjectId =
+      view.state.values.select_project.select_project.selected_option.value;
+
+    const project = await float.getProjectById(selectedProjectId);
+    const { project_team: team } = project;
+
+    if (0 === team.length) {
+      blocks.push(
+        blocksKit.addSection({
+          text: "Geen teamleden gevonden.",
+        })
+      );
+    } else {
+      blocks.push(
+        blocksKit.addSection({
+          text: "De volgende collega's werk(t)en aan dit project:",
+        })
+      );
+
+      for (const teamMember of team) {
+        const memberId = teamMember.people_id;
+        const member = await float.getPeopleById(memberId);
+        let slackUser = null;
+
+        try {
+          slackUser = await client.users.lookupByEmail({
+            email: member.email,
+          });
+        } catch (error) {
+          console.error(error);
+          continue;
+        }
+
+        const slackUserId = slackUser.user.id;
+
+        blocks.push(
+          blocksKit.addSection({
+            text: `*Naam:* <@${slackUserId}>\n*E-mail:* ${member.email}`,
+          })
+        );
+
+        if (team.indexOf(teamMember) < team.length - 1) {
+          blocks.push(blocksKit.addDivider());
+        }
+      }
+
+      blocks.push(
+        blocksKit.addContext({
+          text: "Deze informatie is dynamisch verzameld uit Float, en kan onvolledig zijn.",
+        })
+      );
+    }
+
+    const modalOptions = blocksKit.createModal({
+      triggerId: body.trigger_id,
+      callbackId: "get_project_team",
+      title: "Team opzoeken",
+      blocks,
+    });
+
+    await client.views.open(modalOptions);
+  });
+
+  /**
    * This view is triggered whe the user wants to see the PM of a project.
    */
   app.view("get_project_manager", async ({ ack, body, view, client }) => {

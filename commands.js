@@ -47,6 +47,10 @@ function registerCommands(app) {
             text: "Projectmanager opzoeken",
             actionId: "get_project_manager",
           }),
+          blocksKit.addButton({
+            text: "Team bekijken",
+            actionId: "get_project_team",
+          }),
         ],
       }),
     ];
