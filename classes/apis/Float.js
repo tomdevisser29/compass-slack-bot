@@ -47,11 +47,11 @@ class Float {
   }
 
   async fetchTasksByPersonId(personId, startDate, endDate) {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 2);
+    const today = new Date();
+    today.setDate(today.getDate());
 
     const formatDate = (date) => date.toISOString().split("T")[0];
-    const formattedDate = formatDate(tomorrow);
+    const formattedDate = formatDate(today);
 
     if (!startDate) {
       startDate = formattedDate;
