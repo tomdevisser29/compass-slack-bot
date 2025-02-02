@@ -9,29 +9,23 @@ function registerActions(app) {
   app.action("get_company_info", async ({ body, client, ack, logger }) => {
     await ack();
 
-    const modalOptions = {
-      trigger_id: body.trigger_id,
-      view: {
-        type: "modal",
-        callback_id: "get_company_info",
-        title: {
-          type: "plain_text",
-          text: "Bedrijfsinformatie",
-        },
-        close: {
-          type: "plain_text",
-          text: "Sluiten",
-        },
-        blocks: [
-          blocksKit.addDispatchInput({
-            blockId: "search_company",
-            actionId: "search_company",
-            label: "Bedrijf zoeken",
-            placeholder: "Vul hier een bedrijfsnaam in",
-          }),
-        ],
-      },
-    };
+    const blocks = [];
+
+    blocks.push(
+      blocksKit.addDispatchInput({
+        blockId: "search_company",
+        actionId: "search_company",
+        label: "Bedrijf zoeken",
+        placeholder: "Vul hier een bedrijfsnaam in",
+      })
+    );
+
+    const modalOptions = blocksKit.createModal({
+      triggerId: body.trigger_id,
+      callbackId: "get_company_info",
+      title: "Bedrijfsinformatie",
+      blocks,
+    });
 
     await client.views.open(modalOptions);
   });
@@ -42,29 +36,23 @@ function registerActions(app) {
   app.action("get_recent_tickets", async ({ body, client, ack, logger }) => {
     await ack();
 
-    const modalOptions = {
-      trigger_id: body.trigger_id,
-      view: {
-        type: "modal",
-        callback_id: "get_recent_tickets",
-        title: {
-          type: "plain_text",
-          text: "Recente tickets",
-        },
-        close: {
-          type: "plain_text",
-          text: "Sluiten",
-        },
-        blocks: [
-          blocksKit.addDispatchInput({
-            blockId: "search_company",
-            actionId: "search_company",
-            label: "Bedrijfsnaam zoeken",
-            placeholder: "Vul hier een bedrijfsnaam in",
-          }),
-        ],
-      },
-    };
+    const blocks = [];
+
+    blocks.push(
+      blocksKit.addDispatchInput({
+        blockId: "search_company",
+        actionId: "search_company",
+        label: "Bedrijf zoeken",
+        placeholder: "Vul hier een bedrijfsnaam in",
+      })
+    );
+
+    const modalOptions = blocksKit.createModal({
+      triggerId: body.trigger_id,
+      callbackId: "get_recent_tickets",
+      title: "Recente tickets",
+      blocks,
+    });
 
     await client.views.open(modalOptions);
   });
@@ -94,31 +82,23 @@ function registerActions(app) {
       ];
 
       if ("get_company_info" === body.view.callback_id) {
-        await client.views.update({
-          view_id: body.view.id,
-          view: {
-            type: "modal",
-            callback_id: "get_company_info",
-            title: {
-              type: "plain_text",
-              text: "Bedrijfsinformatie",
-            },
-            blocks,
-          },
+        const updatedModal = blocksKit.updateModal({
+          viewId: body.view.id,
+          callbackId: "get_company_info",
+          title: "Bedrijfsinformatie",
+          blocks,
         });
+
+        await client.views.update(updatedModal);
       } else if ("get_recent_tickets" === body.view.callback_id) {
-        await client.views.update({
-          view_id: body.view.id,
-          view: {
-            type: "modal",
-            callback_id: "get_recent_tickets",
-            title: {
-              type: "plain_text",
-              text: "Recente tickets",
-            },
-            blocks,
-          },
+        const updatedModal = blocksKit.updateModal({
+          viewId: body.view.id,
+          callbackId: "get_recent_tickets",
+          title: "Recente tickets",
+          blocks,
         });
+
+        await client.views.update(updatedModal);
       }
 
       return;
@@ -163,47 +143,23 @@ function registerActions(app) {
     }
 
     if ("get_company_info" === body.view.callback_id) {
-      await client.views.update({
-        view_id: body.view.id,
-        view: {
-          type: "modal",
-          callback_id: "get_company_info",
-          title: {
-            type: "plain_text",
-            text: "Bedrijfsinformatie",
-          },
-          blocks,
-          close: {
-            type: "plain_text",
-            text: "Sluiten",
-          },
-          submit: {
-            type: "plain_text",
-            text: "Informatie bekijken",
-          },
-        },
+      const updatedModal = blocksKit.updateModal({
+        viewId: body.view.id,
+        callbackId: "get_company_info",
+        title: "Bedrijfsinformatie",
+        blocks,
       });
+
+      await client.views.update(updatedModal);
     } else if ("get_recent_tickets" === body.view.callback_id) {
-      await client.views.update({
-        view_id: body.view.id,
-        view: {
-          type: "modal",
-          callback_id: "get_recent_tickets",
-          title: {
-            type: "plain_text",
-            text: "Recente tickets",
-          },
-          blocks,
-          close: {
-            type: "plain_text",
-            text: "Sluiten",
-          },
-          submit: {
-            type: "plain_text",
-            text: "Tickets bekijken",
-          },
-        },
+      const updatedModal = blocksKit.updateModal({
+        viewId: body.view.id,
+        callbackId: "get_recent_tickets",
+        title: "Recente tickets",
+        blocks,
       });
+
+      await client.views.update(updatedModal);
     }
   });
 

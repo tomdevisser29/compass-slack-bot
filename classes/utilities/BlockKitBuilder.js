@@ -57,6 +57,54 @@ class BlockKitBuilder {
     };
   }
 
+  createModal({ triggerId, callbackId, title, blocks }) {
+    return {
+      trigger_id: triggerId,
+      view: {
+        type: "modal",
+        callback_id: callbackId,
+        title: {
+          type: "plain_text",
+          text: title,
+        },
+        close: {
+          type: "plain_text",
+          text: "Sluiten",
+        },
+        blocks,
+      },
+    };
+  }
+
+  updateModal({
+    viewId,
+    callbackId,
+    title,
+    blocks,
+    submitText = "Bevestigen",
+  }) {
+    return {
+      view_id: viewId,
+      view: {
+        type: "modal",
+        callback_id: callbackId,
+        title: {
+          type: "plain_text",
+          text: title,
+        },
+        close: {
+          type: "plain_text",
+          text: "Sluiten",
+        },
+        submit: {
+          type: "plain_text",
+          text: submitText,
+        },
+        blocks,
+      },
+    };
+  }
+
   addButton({ text, actionId }) {
     return {
       type: "button",

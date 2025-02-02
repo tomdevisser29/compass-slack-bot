@@ -55,28 +55,6 @@ class HubSpot {
     }
   }
 
-  getSearchInput({ blockId, actionId, label, placeholder, initialValue = "" }) {
-    return {
-      block_id: blockId,
-      dispatch_action: true,
-      type: "input",
-      element: {
-        type: "plain_text_input",
-        action_id: actionId,
-        initial_value: initialValue,
-        placeholder: {
-          type: "plain_text",
-          text: placeholder,
-        },
-      },
-      label: {
-        type: "plain_text",
-        text: label,
-        emoji: true,
-      },
-    };
-  }
-
   async findLatestTicketsByCompanyId(companyId) {
     const query = {
       properties: ["subject", "content", "hs_pipeline_stage", "createdate"],

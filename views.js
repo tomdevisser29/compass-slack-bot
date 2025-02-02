@@ -37,109 +37,91 @@ function registerViews(app) {
       },
     ];
 
-    await client.views.open({
-      trigger_id: body.trigger_id,
-      view: {
-        type: "modal",
-        callback_id: "company_info",
-        close: {
-          type: "plain_text",
-          text: "Sluiten",
-        },
-        title: {
-          type: "plain_text",
-          text: "Bedrijfsinformatie",
-        },
-        blocks,
-      },
+    const modalOptions = blocksKit.createModal({
+      triggerId: body.trigger_id,
+      callbackId: "company_info",
+      title: "Bedrijfsinformatie",
+      blocks,
     });
+
+    await client.views.open(modalOptions);
   });
 
   /**
    * This view is triggered when the user wants to get the recent tickets of a company.
    */
-  app.view(
-    "get_recent_tickets",
-    async ({ ack, body, view, client, logger }) => {
-      await ack();
+  app.view("get_recent_tickets", async ({ ack, body, view, client }) => {
+    await ack();
 
-      const selectedCompanyId =
-        view.state.values.select_company.select_company.selected_option.value;
+    const blocks = [];
 
-      const associatedTickets = await hubspot.findLatestTicketsByCompanyId(
-        selectedCompanyId
+    const selectedCompanyId =
+      view.state.values.select_company.select_company.selected_option.value;
+
+    const associatedTickets = await hubspot.findLatestTicketsByCompanyId(
+      selectedCompanyId
+    );
+
+    if (!associatedTickets || 0 === associatedTickets.results.length) {
+      blocks.push(
+        blocksKit.addSection({
+          text: "Geen tickets gevonden.",
+        })
       );
-
+    } else {
       const stageMap = await hubspot.getTicketPipelineStages();
       const tickets = associatedTickets.results.reverse();
 
-      const blocks = [];
+      tickets.forEach((ticket, index) => {
+        const id = ticket.id;
+        const { subject, content, createdate, hs_pipeline_stage } =
+          ticket.properties;
 
-      if (0 === tickets.length) {
         blocks.push(
-          blocksKit.addSection({
-            text: "Geen tickets gevonden.",
+          blocksKit.addLinkButton({
+            text: `*Onderwerp:* ${subject}`,
+            buttonText: "Bekijk op HubSpot",
+            actionId: "view_ticket",
+            buttonValue: "view_ticket",
+            url: `https://app.hubspot.com/contacts/${process.env.HUBSPOT_PORTAL_ID}/tickets/${id}`,
           })
         );
-      } else {
-        tickets.forEach((ticket, index) => {
-          const { subject, content, createdate, hs_pipeline_stage, id } =
-            ticket.properties;
 
+        if (content) {
           blocks.push(
-            blocksKit.addLinkButton({
-              text: `*Onderwerp:* ${subject}`,
-              buttonText: "Bekijk op HubSpot",
-              actionId: "view_ticket",
-              buttonValue: "view_ticket",
-              url: `https://app.hubspot.com/contacts/${process.env.HUBSPOT_PORTAL_ID}/tickets/${id}`,
+            blocksKit.addSection({
+              text: `${content.substring(0, 200)}...`,
             })
           );
+        }
 
-          if (content) {
-            blocks.push(
-              blocksKit.addSection({
-                text: `${content.substring(0, 200)}...`,
-              })
-            );
-          }
+        blocks.push(
+          blocksKit.addContext({
+            text: `*Aangemaakt op:* ${new Date(createdate).toLocaleDateString(
+              "nl-NL",
+              { day: "numeric", month: "long", year: "numeric" }
+            )}\n*Status:* ${stageMap[hs_pipeline_stage]}`,
+          })
+        );
 
-          blocks.push(
-            blocksKit.addContext({
-              text: `*Aangemaakt op:* ${new Date(createdate).toLocaleDateString(
-                "nl-NL",
-                { day: "numeric", month: "long", year: "numeric" }
-              )}\n*Status:* ${stageMap[hs_pipeline_stage]}`,
-            })
-          );
+        blocks.push(blocksKit.addWhitespace());
 
-          blocks.push(blocksKit.addWhitespace());
-
-          // Add a divider unless it's the last ticket
-          if (index < tickets.length - 1) {
-            blocks.push(blocksKit.addDivider());
-          }
-        });
-      }
-
-      await client.views.open({
-        trigger_id: body.trigger_id,
-        view: {
-          type: "modal",
-          callback_id: "company_tickets",
-          close: {
-            type: "plain_text",
-            text: "Sluiten",
-          },
-          title: {
-            type: "plain_text",
-            text: "Recente tickets",
-          },
-          blocks,
-        },
+        // Add a divider unless it's the last ticket
+        if (index < tickets.length - 1) {
+          blocks.push(blocksKit.addDivider());
+        }
       });
     }
-  );
+
+    const modalOptions = blocksKit.createModal({
+      triggerId: body.trigger_id,
+      callbackId: "company_tickets",
+      title: "Recente tickets",
+      blocks,
+    });
+
+    await client.views.open(modalOptions);
+  });
 }
 
 module.exports = {

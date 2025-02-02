@@ -49,5 +49,5 @@ app.assistant(compass);
  */
 (async () => {
   await app.start();
-  app.logger.info("⚡️ Compass is awake!");
+  app.logger.info("🌊 Compass is sailing!");
 })();

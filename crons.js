@@ -20,7 +20,7 @@ function registerCrons(app) {
     const slackMembers = result.members;
     const floatAccounts = await float.getPeople();
 
-    slackMembers.forEach(async (member) => {
+    for (const member of slackMembers) {
       const { name, id } = member;
       const email = member.profile.email;
 
@@ -91,13 +91,12 @@ function registerCrons(app) {
         blocks.push(blocksKit.addDivider());
       }
 
-      // Send a slack message using blocks to the member
       await app.client.chat.postMessage({
         token: process.env.SLACK_BOT_TOKEN,
         channel: id,
         blocks,
       });
-    });
+    }
   });
 }
 
