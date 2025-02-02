@@ -71,7 +71,7 @@ function registerViews(app) {
       );
 
       const stageMap = await hubspot.getTicketPipelineStages();
-      const tickets = associatedTickets.results;
+      const tickets = associatedTickets.results.reverse();
 
       const blocks = [];
 
