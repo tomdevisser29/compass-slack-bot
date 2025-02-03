@@ -23,10 +23,8 @@ const {
  *    -> {"intent": "website_count"}
  */
 class IntentionHandler {
-  intentRouter = async (userQuestion) => {
-    const intentObject = await this.analyseIntent(userQuestion);
-
-    switch (intentObject.intent) {
+  intentRouter = async (intention) => {
+    switch (intention.intent) {
       case "website_count":
         const websiteCount = await mainwp.getWebsiteCount();
         const countResponse = await openai.chat.completions.create({
@@ -47,9 +45,8 @@ class IntentionHandler {
 
       case "website_tag_count":
         const tags = await mainwp.getTags();
-
         const tag = Object.values(tags.data).find(
-          (tag) => tag.name === intentObject.tag
+          (tag) => tag.name === intention.tag
         );
 
         if (!tag) {

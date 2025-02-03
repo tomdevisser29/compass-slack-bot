@@ -32,7 +32,7 @@ registerViews(app);
 /**
  * Registers the app's crons.
  */
-registerCrons(app);
+// registerCrons(app);
 
 /**
  * Registers the app's commands.

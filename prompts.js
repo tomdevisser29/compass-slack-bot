@@ -14,6 +14,7 @@ Voor formatting:
 	•	Italic: _tekst_
 	•	Doorhalen: ~tekst~
 	•	Links: <https://example.com/|tekst>
+  •	Gebruikers taggen: <@U1234567>
 
 Vermijd standaard markdown zoals ** of _ die niet Slack-compatible is.
 
@@ -41,8 +42,15 @@ Voorbeelden:
   -> {"intent": "website_tag_count", "tag": "High Risk"}
 3. "Hoeveel multisites hebben we?" (mogelijke tags: "Development", "Production", "High Risk", "Multisite", "Staging Sites", "TRUE", "Antagonist", "Internal", "Kinsta", "Control F5", "Low-code" )
   -> {"intent": "website_tag_count", "tag": "Multisite"}
-   
+4. "Kun je het actieve kanaal/de chat/het gesprek dat open staat samenvatten?"
+  -> {"intent": "summarize_chat"}  
+5. "Kun je de laatste 20 berichten in het actieve kanaal/de chat/het gesprek dat open staat samenvatten?"
+  -> {"intent": "summarize_chat", "limit": 20}   
+
+
 Vraag:`;
+
+const SUMMARIZE_CHAT_PROMPT = `Genereer een korte samenvatting van het Slack kanaal dat open staat.`;
 
 const WEBSITE_COUNT_PROMPT = `
 De vraag is: Hoeveel websites beheren we?
@@ -86,4 +94,5 @@ module.exports = {
   WEBSITE_COUNT_PROMPT,
   WEBSITE_TAG_COUNT_PROMPT,
   GENERATE_TITLE_PROMPT,
+  SUMMARIZE_CHAT_PROMPT,
 };

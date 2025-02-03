@@ -12,6 +12,7 @@ const {
   COMPASS_BRIEFING,
   FIRST_SUGGESTED_PROMPTS,
   GENERATE_TITLE_PROMPT,
+  SUMMARIZE_CHAT_PROMPT,
 } = require("./prompts");
 
 /**
@@ -40,101 +41,126 @@ const compass = new Assistant({
     say,
     setStatus,
     setTitle,
+    getThreadContext,
   }) => {
     try {
       const { text, channel, thread_ts, bot_id } = message;
       await setStatus("aan het typen...");
 
-      /**
-       * The intentionHandler is responsible for routing the user's message to the correct
-       * handler based on the detected intention.
-       */
-      const intentionReponse = await intentionHandler.intentRouter(text);
+      const intention = await intentionHandler.analyseIntent(text);
 
-      if (intentionReponse) {
-        await say(`${intentionReponse}`);
-        return;
+      if (intention.intent === "summarize_chat") {
+        const limit = intention.limit || 50;
+
+        return await summarizeChannel({
+          client,
+          say,
+          setTitle,
+          getThreadContext,
+          limit,
+        });
+      } else if (intention) {
+        const response = await intentionHandler.intentRouter(intention);
+
+        if (response) {
+          return await say(`${response}`);
+        }
       }
 
-      /**
-       * If the intention is not handled by the intentionHandler, the message is sent to OpenAI
-       * for default processing. First the thread history is retrieved and tagged for OpenAI processing.
-       */
       const thread = await client.conversations.replies({
-        channel: channel,
+        channel,
         ts: thread_ts,
         oldest: thread_ts,
       });
 
-      /**
-       * The user's message is tagged as a user message and added to the thread history.
-       */
       const userMessage = { role: "user", content: text };
+      const threadHistory = thread.messages.map((message) => ({
+        role: message.bot_id ? "assistant" : "user",
+        content: message.text,
+      }));
 
-      /**
-       * The thread history is mapped to the correct format for OpenAI processing.
-       */
-      const threadHistory = thread.messages.map((message) => {
-        const role = bot_id ? "assistant" : "user";
-        return { role, content: text };
-      });
-
-      /**
-       * The correctly formatted messages are combined.
-       */
       const messages = [
         { role: "system", content: COMPASS_BRIEFING },
         ...threadHistory,
         userMessage,
       ];
+      const openAiMessage = await getOpenAiResponse(messages);
 
-      /**
-       * The messages are sent to OpenAI for processing.
-       */
-      const openAiResponse = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        n: 1,
-        messages,
-      });
-
-      const openAiMessage = openAiResponse.choices[0].message.content;
-
-      /**
-       * The OpenAI response is sent back to the user.
-       */
       await say({
         blocks: [blockKitBuilder.addSection({ text: openAiMessage })],
         text: openAiMessage,
       });
 
-      /**
-       * The OpenAI response is used to generate a title for the thread.
-       */
-      const openAiGeneratedTitle = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        n: 1,
-        messages: [
-          {
-            role: "system",
-            content: `${GENERATE_TITLE_PROMPT} ${openAiMessage}.`,
-          },
-        ],
-      });
-
-      /**
-       * Set the generated title as the thread title.
-       */
-      await setTitle(openAiGeneratedTitle.choices[0].message.content);
-      return;
+      const titleMessage = [
+        {
+          role: "system",
+          content: `${GENERATE_TITLE_PROMPT} ${openAiMessage}.`,
+        },
+      ];
+      const generatedTitle = await getOpenAiResponse(titleMessage);
+      return await setTitle(generatedTitle);
     } catch (e) {
-      /**
-       * If an error occurs, log the error and send a message to the user.
-       */
       logger.error(`Error processing message: ${e}`);
       await say("Er is iets misgegaan bij het verwerken van je verzoek.");
     }
   },
 });
+
+async function summarizeChannel({
+  client,
+  say,
+  setTitle,
+  getThreadContext,
+  limit,
+}) {
+  const threadContext = await getThreadContext();
+  let channelHistory;
+
+  try {
+    channelHistory = await client.conversations.history({
+      channel: threadContext.channel_id,
+      limit: limit,
+    });
+  } catch (e) {
+    if (e.data.error === "not_in_channel") {
+      await client.conversations.join({ channel: threadContext.channel_id });
+      channelHistory = await client.conversations.history({
+        channel: threadContext.channel_id,
+        limit: 50,
+      });
+    } else {
+      throw e;
+    }
+  }
+
+  let prompt = `${SUMMARIZE_CHAT_PROMPT} <#${threadContext.channel_id}>:`;
+  for (const m of channelHistory.messages.reverse()) {
+    if (m.user) prompt += `\n<@${m.user}> says: ${m.text}`;
+  }
+
+  const messages = [
+    { role: "system", content: COMPASS_BRIEFING },
+    { role: "user", content: prompt },
+  ];
+
+  const summary = await getOpenAiResponse(messages);
+
+  await say({
+    blocks: [blockKitBuilder.addSection({ text: summary })],
+    text: summary,
+  });
+
+  await setTitle(`Samenvatting van <#${threadContext.channel_id}>`);
+}
+
+async function getOpenAiResponse(messages) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    n: 1,
+    messages,
+  });
+  return response.choices[0].message.content;
+}
 
 module.exports = {
   compass,

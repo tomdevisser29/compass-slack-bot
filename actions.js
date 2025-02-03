@@ -1,5 +1,5 @@
 const blocksKit = require("./classes/utilities/BlockKitBuilder");
-const hubspot = require("./classes/apis/Hubspot");
+const hubspot = require("./classes/apis/HubSpot");
 const float = require("./classes/apis/Float");
 
 function registerActions(app) {

@@ -15,7 +15,6 @@ class HubSpot {
     try {
       const response = await this.client.crm.companies.basicApi.getPage();
 
-      // loop through companies
       response.results.forEach((company) => {
         this.getCompanyBranch(company.id);
       });
