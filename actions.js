@@ -250,6 +250,7 @@ function registerActions(app) {
 
     const floatProjectId = body.actions[0].action_id.replace("feedback_", "");
     const feedback = body.actions[0].value;
+    const userId = body.user.id;
 
     const channelId = body.channel.id;
     const threadTs = body.message.thread_ts || body.message.ts;
@@ -267,30 +268,36 @@ function registerActions(app) {
     });
 
     const project = await float.getProjectById(floatProjectId);
+    if (!project) return;
+
     const { name: projectName, project_manager: projectManagerId } = project;
+    let projectManagerSlackId;
 
-    const projectManager = await float.getAccountById(projectManagerId);
-    let { name: projectManagerName, email: projectManagerEmail } =
-      projectManager;
+    if (process.env.NODE_ENV === "development") {
+      projectManagerSlackId = userId;
+    } else {
+      const projectManager = await float.getAccountById(projectManagerId);
+      const projectManagerEmail = projectManager?.email;
 
-    const result = await client.users.lookupByEmail({
-      email: projectManagerEmail,
-    });
-
-    if (!result.ok) {
-      return await say({
-        channel: channelId,
-        thread_ts: threadTs,
-        text: `Bedankt voor de terugkoppeling voor ${projectName}. Ik heb geen project manager kunnen vinden, dus ik kan de terugkoppeling niet automatisch doorsturen. Hier is de terugkoppeling: ${feedback}.`,
+      const result = await client.users.lookupByEmail({
+        email: projectManagerEmail,
       });
+
+      if (!result.ok) {
+        return await say({
+          channel: channelId,
+          thread_ts: threadTs,
+          text: `Bedankt voor de terugkoppeling voor *${projectName}*. Ik kon de projectmanager niet vinden, dus hier is je terugkoppeling: ${feedback}.`,
+        });
+      }
+
+      projectManagerSlackId = result.user.id;
     }
 
-    const projectManagerSlackId = result.user.id;
-
     await client.chat.postMessage({
-      token: process.env.SLACK_BOT_TOKEN,
+      token: process.env.USER_OAUTH_TOKEN,
       channel: projectManagerSlackId,
-      text: `Je hebt feedback ontvangen voor *${projectName}* van <@${body.user.id}>.\n\n*Feedback*\n${feedback}`,
+      text: `:wave: <@${projectManagerSlackId}>, hierbij een korte terugkoppeling voor *${projectName}*.\n\n*Terugkoppeling*\n${feedback}`,
     });
 
     await say({

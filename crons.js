@@ -5,31 +5,38 @@ const cron = require("node-cron");
 function registerCrons(app) {
   /**
    * This cron job sends each member that has a Float schedule, a message
-   * at 16:30 on weekdays to check if they have reported their hours to the
+   * at 16:00 on weekdays to check if they have reported their hours to the
    * project manager.
    */
-  cron.schedule("30 16 * * 1-5", async () => {
+  const collectFeedback = async () => {
     const result = await app.client.users.list({
       token: process.env.SLACK_BOT_TOKEN,
     });
 
     if (!result.ok || !result.members) {
-      return;
+      throw new Error("Failed to fetch Slack members.");
     }
 
     const slackMembers = result.members;
     const floatAccounts = await float.getPeople();
 
     for (const member of slackMembers) {
-      const { name, id } = member;
+      const { id } = member;
       const email = member.profile.email;
 
-      const floatAccount = floatAccounts.find(
-        (floatAccount) => floatAccount.email === email
-      );
+      if (process.env.NODE_ENV === "development") {
+        if (email !== process.env.SLACK_EMAIL_DEVELOPER) continue;
+      }
+
+      const floatAccount =
+        process.env.NODE_ENV === "development"
+          ? floatAccounts.find(
+              (acc) => acc.email === process.env.FLOAT_EMAIL_DEVELOPER
+            )
+          : floatAccounts.find((acc) => acc.email === email);
 
       if (!floatAccount) {
-        return;
+        continue;
       }
 
       const todaysTasks = await float.fetchTasksByPersonId(
@@ -37,14 +44,17 @@ function registerCrons(app) {
       );
 
       if (!todaysTasks) {
-        return;
+        continue;
       }
 
       const blocks = [];
 
       blocks.push(
         blocksKit.addSection({
-          text: `:wave: Hey ${name}, laten we je planning voor vandaag kort doornemen. Heb je alles teruggekoppeld aan de projectmanager?`,
+          text: `:wave: Ahoy <@${id}>, laten we je planning voor vandaag doornemen. Hou het kort; focus op bijzonderheden.`,
+        }),
+        blocksKit.addContext({
+          text: "Deze terugkoppeling vervangt *niet* de terugkoppeling in Trello en HubSpot.",
         })
       );
 
@@ -94,10 +104,17 @@ function registerCrons(app) {
       await app.client.chat.postMessage({
         token: process.env.SLACK_BOT_TOKEN,
         channel: id,
+        text: "Dagelijkse terugkoppeling voor " + new Date().toDateString(),
         blocks,
       });
     }
-  });
+  };
+
+  if (process.env.NODE_ENV === "development") {
+    collectFeedback();
+  } else if (process.env.NODE_ENV === "production") {
+    cron.schedule("0 16 * * 1-5", collectFeedback);
+  }
 }
 
 module.exports = {
