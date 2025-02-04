@@ -24,63 +24,37 @@ const {
  */
 class IntentionHandler {
   intentRouter = async (intention) => {
+    const messages = [{ role: "system", content: COMPASS_BRIEFING }];
     switch (intention.intent) {
       case "website_count":
         const websiteCount = await mainwp.getWebsiteCount();
-        const countResponse = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          n: 1,
-          messages: [
-            { role: "system", content: COMPASS_BRIEFING },
-            {
-              role: "system",
-              content: `${WEBSITE_COUNT_PROMPT} ${JSON.stringify(
-                websiteCount
-              )}`,
-            },
-          ],
+        messages.push({
+          role: "system",
+          content: `${WEBSITE_COUNT_PROMPT} ${JSON.stringify(websiteCount)}`,
         });
-
-        return countResponse.choices[0].message.content;
+        return await openai.createCompletion({ messages });
 
       case "website_tag_count":
         const tags = await mainwp.getTags();
         const tag = Object.values(tags.data).find(
           (tag) => tag.name === intention.tag
         );
-
-        if (!tag) {
-          return null;
-        }
-
-        const tagCountResponse = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          n: 1,
-          messages: [
-            { role: "system", content: COMPASS_BRIEFING },
-            {
-              role: "system",
-              content: `${WEBSITE_TAG_COUNT_PROMPT} ${JSON.stringify(tag)}`,
-            },
-          ],
+        if (!tag) return null;
+        messages.push({
+          role: "system",
+          content: `${WEBSITE_TAG_COUNT_PROMPT} ${JSON.stringify(tag)}`,
         });
+        return await openai.createCompletion({ messages });
 
-        return tagCountResponse.choices[0].message.content;
+      default:
+        return null;
     }
-
-    return null;
   };
 
   analyseIntent = async (userQuestion) => {
     const prompt = `${ANALYSE_INTENT_PROMPT} ${userQuestion}`;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      n: 1,
-      messages: [{ role: "system", content: prompt }],
-    });
-
-    const intentObject = response.choices[0].message.content;
+    const messages = [{ role: "system", content: prompt }];
+    const intentObject = await openai.createCompletion({ messages });
 
     try {
       return JSON.parse(intentObject);

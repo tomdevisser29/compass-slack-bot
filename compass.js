@@ -44,22 +44,20 @@ const compass = new Assistant({
     getThreadContext,
   }) => {
     try {
-      const { text, channel, thread_ts, bot_id } = message;
+      const { text, channel, thread_ts } = message;
+      const userMessage = { role: "user", content: text };
+      let threadContext;
+      let prompts;
+
       await setStatus("aan het typen...");
 
       const intention = await intentionHandler.analyseIntent(text);
 
-      if (intention.intent === "summarize_chat") {
-        const limit = intention.limit || 50;
+      logger.info(
+        `Received message with intention: ${JSON.stringify(intention)}`
+      );
 
-        return await summarizeChannel({
-          client,
-          say,
-          setTitle,
-          getThreadContext,
-          limit,
-        });
-      } else if (intention) {
+      if (intention && intention.intent !== "summarize_chat") {
         const response = await intentionHandler.intentRouter(intention);
 
         if (response) {
@@ -67,37 +65,75 @@ const compass = new Assistant({
         }
       }
 
-      const thread = await client.conversations.replies({
-        channel,
-        ts: thread_ts,
-        oldest: thread_ts,
-      });
+      logger.info("Preparing channel history for OpenAI completion.");
 
-      const userMessage = { role: "user", content: text };
-      const threadHistory = thread.messages.map((message) => ({
-        role: message.bot_id ? "assistant" : "user",
-        content: message.text,
-      }));
+      if (intention.intent === "summarize_chat") {
+        threadContext = await getThreadContext();
+
+        try {
+          channelHistory = await client.conversations.history({
+            channel: threadContext.channel_id,
+            limit: intention.limit || 50,
+          });
+        } catch (e) {
+          // If the bot is not in the channel, join it and try again.
+          if (e.data.error === "not_in_channel") {
+            await client.conversations.join({
+              channel: threadContext.channel_id,
+            });
+            channelHistory = await client.conversations.history({
+              channel: threadContext.channel_id,
+              limit: intention.limit || 50,
+            });
+          } else {
+            throw e;
+          }
+        }
+
+        let prompt = `${SUMMARIZE_CHAT_PROMPT} <#${threadContext.channel_id}>:`;
+
+        for (const m of channelHistory.messages.reverse()) {
+          if (m.user) prompt += `\n<@${m.user}> says: ${m.text}`;
+        }
+
+        prompts = [{ role: "user", content: prompt }];
+      } else {
+        channelHistory = await client.conversations.replies({
+          channel,
+          ts: thread_ts,
+          oldest: thread_ts,
+        });
+
+        prompts = channelHistory.messages.map((message) => ({
+          role: message.bot_id ? "assistant" : "user",
+          content: message.text,
+        }));
+
+        prompts.push(userMessage);
+      }
 
       const messages = [
         { role: "system", content: COMPASS_BRIEFING },
-        ...threadHistory,
-        userMessage,
+        ...prompts,
       ];
-      const openAiMessage = await getOpenAiResponse(messages);
+
+      const completion = await openai.createCompletion({ messages });
+
+      logger.info("Sending back OpenAI completion.");
 
       await say({
-        blocks: [blockKitBuilder.addSection({ text: openAiMessage })],
-        text: openAiMessage,
+        blocks: [blockKitBuilder.addSection({ text: completion })],
+        text: completion,
       });
 
-      const titleMessage = [
-        {
-          role: "system",
-          content: `${GENERATE_TITLE_PROMPT} ${openAiMessage}.`,
-        },
+      const titlePrompt = [
+        { role: "system", content: `${GENERATE_TITLE_PROMPT} ${completion}.` },
       ];
-      const generatedTitle = await getOpenAiResponse(titleMessage);
+
+      const generatedTitle = await openai.createCompletion({
+        messages: titlePrompt,
+      });
+
       return await setTitle(generatedTitle);
     } catch (e) {
       logger.error(`Error processing message: ${e}`);
@@ -105,62 +141,6 @@ const compass = new Assistant({
     }
   },
 });
-
-async function summarizeChannel({
-  client,
-  say,
-  setTitle,
-  getThreadContext,
-  limit,
-}) {
-  const threadContext = await getThreadContext();
-  let channelHistory;
-
-  try {
-    channelHistory = await client.conversations.history({
-      channel: threadContext.channel_id,
-      limit: limit,
-    });
-  } catch (e) {
-    if (e.data.error === "not_in_channel") {
-      await client.conversations.join({ channel: threadContext.channel_id });
-      channelHistory = await client.conversations.history({
-        channel: threadContext.channel_id,
-        limit: 50,
-      });
-    } else {
-      throw e;
-    }
-  }
-
-  let prompt = `${SUMMARIZE_CHAT_PROMPT} <#${threadContext.channel_id}>:`;
-  for (const m of channelHistory.messages.reverse()) {
-    if (m.user) prompt += `\n<@${m.user}> says: ${m.text}`;
-  }
-
-  const messages = [
-    { role: "system", content: COMPASS_BRIEFING },
-    { role: "user", content: prompt },
-  ];
-
-  const summary = await getOpenAiResponse(messages);
-
-  await say({
-    blocks: [blockKitBuilder.addSection({ text: summary })],
-    text: summary,
-  });
-
-  await setTitle(`Samenvatting van <#${threadContext.channel_id}>`);
-}
-
-async function getOpenAiResponse(messages) {
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    n: 1,
-    messages,
-  });
-  return response.choices[0].message.content;
-}
 
 module.exports = {
   compass,
