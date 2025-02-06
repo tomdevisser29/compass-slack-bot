@@ -195,6 +195,7 @@ class Float {
     const url = `${
       this.baseUrl
     }/accounts/${personId}?${queryParams.toString()}`;
+
     const response = await fetch(url, {
       method: "GET",
       headers: this.defaultHeaders,
