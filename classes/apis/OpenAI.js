@@ -1,11 +1,10 @@
-/**
- * This file returns an instance of the OpenAI class with the API key from the .env file.
- */
-
 const { OpenAI: client } = require("openai");
 const { config } = require("dotenv");
 config();
 
+/**
+ * Class for interacting with OpenAI API.
+ */
 class OpenAI {
   constructor({ apiKey }) {
     this.client = new client({ apiKey });
@@ -18,10 +17,10 @@ class OpenAI {
         messages,
         n: 1,
       });
-
       return response.choices[0].message.content;
     } catch (error) {
       console.error(error);
+      throw error;
     }
   }
 
@@ -31,10 +30,10 @@ class OpenAI {
         model,
         input: text,
       });
-
       return response.data[0].embedding;
     } catch (error) {
       console.error(error);
+      throw error;
     }
   }
 }

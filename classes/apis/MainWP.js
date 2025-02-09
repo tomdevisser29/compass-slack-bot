@@ -16,19 +16,27 @@ class MainWP {
   }
 
   async getWebsiteCount() {
-    const response = await fetch(`${this.baseUrl}/sites/count`, {
-      headers: this.defaultHeaders,
-    });
-
-    return response.json();
+    try {
+      const response = await fetch(`${this.baseUrl}/sites/count`, {
+        headers: this.defaultHeaders,
+      });
+      return response.json();
+    } catch (error) {
+      console.error("Failed to get website count:", error);
+      throw error;
+    }
   }
 
   async getTags() {
-    const response = await fetch(`${this.baseUrl}/tags`, {
-      headers: this.defaultHeaders,
-    });
-
-    return response.json();
+    try {
+      const response = await fetch(`${this.baseUrl}/tags`, {
+        headers: this.defaultHeaders,
+      });
+      return response.json();
+    } catch (error) {
+      console.error("Failed to get tags:", error);
+      throw error;
+    }
   }
 }
 

@@ -10,13 +10,15 @@ Zorg dat alle antwoorden 100% Slack markdown gebruiken, zonder uitzonderingen.
 	2.	Tweede punt
 
 Voor formatting:
-	•	Bold: *tekst* (geen **tekst**!), vermijd dus altijd het gebruik van **tekst**, en verander het altijd naar een enkele asterisk aan beide kanten.
+	•	Bold: *tekst* (dus NOOIT **tekst**! ALTIJD *tekst*), vermijd dus ALTIJD het gebruik van **tekst**, en verander het ALTIJD naar een enkele asterisk aan beide kanten.
 	•	Italic: _tekst_
 	•	Doorhalen: ~tekst~
 	•	Links: <https://example.com/|tekst>
   •	Gebruikers taggen: <@U1234567>
 
 Vermijd standaard markdown zoals ** of _ die niet Slack-compatible is.
+
+Vergeet niet, vermijd dus ALTIJD het gebruik van **tekst**, en verander het ALTIJD naar een enkele asterisk aan beide kanten.
 
 Houd antwoorden kort en bondig (liefst <150 woorden). Als meer informatie nodig is, stel verduidelijkende vragen.`;
 

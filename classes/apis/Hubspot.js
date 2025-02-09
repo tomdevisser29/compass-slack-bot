@@ -14,14 +14,13 @@ class HubSpot {
   async getCompanies() {
     try {
       const response = await this.client.crm.companies.basicApi.getPage();
-
       response.results.forEach((company) => {
         this.getCompanyBranch(company.id);
       });
-    } catch (e) {
-      e.message === "HTTP request failed"
-        ? console.error(JSON.stringify(e.response, null, 2))
-        : console.error(e);
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch companies from HubSpot:", error);
+      throw error;
     }
   }
 
@@ -32,10 +31,9 @@ class HubSpot {
         properties: ["name"],
       });
       return response;
-    } catch (e) {
-      e.message === "HTTP request failed"
-        ? console.error(JSON.stringify(e.response, null, 2))
-        : console.error(e);
+    } catch (error) {
+      console.error("Failed to search companies in HubSpot:", error);
+      throw error;
     }
   }
 
@@ -47,10 +45,9 @@ class HubSpot {
         properties
       );
       return response;
-    } catch (e) {
-      e.message === "HTTP request failed"
-        ? console.error(JSON.stringify(e.response, null, 2))
-        : console.error(e);
+    } catch (error) {
+      console.error("Failed to fetch company information from HubSpot:", error);
+      throw error;
     }
   }
 
@@ -73,26 +70,23 @@ class HubSpot {
     };
 
     try {
-      const response = await this.client.crm.tickets.searchApi.doSearch(query);
-      return response;
-    } catch (e) {
-      console.error(e);
-      throw new Error("Failed to fetch tickets from HubSpot");
+      return await this.client.crm.tickets.searchApi.doSearch(query);
+    } catch (error) {
+      console.error("Failed to fetch tickets from HubSpot:", error);
+      throw error;
     }
   }
 
   async getCompanyBranch(companyId) {
     try {
       const properties = ["industry"];
-      const response = await this.client.crm.companies.basicApi.getById(
+      return await this.client.crm.companies.basicApi.getById(
         companyId,
         properties
       );
-      return response;
-    } catch (e) {
-      e.message === "HTTP request failed"
-        ? console.error(JSON.stringify(e.response, null, 2))
-        : console.error(e);
+    } catch (error) {
+      console.error("Failed to fetch company information from HubSpot:", error);
+      throw error;
     }
   }
 
@@ -103,18 +97,17 @@ class HubSpot {
       );
       const pipelines = response.results;
 
-      // Extract pipeline stages into a lookup table
+      // Extract pipeline stages into a lookup table.
       const stageMap = {};
       pipelines.forEach((pipeline) => {
         pipeline.stages.forEach((stage) => {
-          stageMap[stage.id] = stage.label; // Maps ID -> Name
+          stageMap[stage.id] = stage.label;
         });
       });
-
       return stageMap;
     } catch (error) {
       console.error("Failed to fetch pipeline stages:", error);
-      throw new Error("Could not retrieve pipeline stages.");
+      throw error;
     }
   }
 }

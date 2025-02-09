@@ -17,50 +17,112 @@ class Confluence {
   }
 
   async getSpaces() {
-    const url = `${this.baseUrl}/wiki/rest/api/space`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
-    });
+    const url = `${this.baseUrl}/wiki/api/v2/spaces`;
 
-    return await response.json();
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Failed to get spaces:", error);
+      throw error;
+    }
   }
 
   async getSpace(spaceKey) {
-    const url = `${this.baseUrl}/wiki/rest/api/space/${spaceKey}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
-    });
+    const url = `${this.baseUrl}/wiki/api/v2/space/${spaceKey}`;
 
-    return await response.json();
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Failed to get space:", error);
+      throw error;
+    }
   }
 
-  async getPages(spaceKey) {
-    const url = `${this.baseUrl}/wiki/rest/api/space/${spaceKey}/content`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
+  async getPagesBySpace({
+    spaceId,
+    status = "current",
+    depth = "root",
+    limit = 25,
+  }) {
+    let results = [];
+    let hasMore = true;
+
+    // Construct base query parameters for the first request
+    const queryParams = new URLSearchParams({
+      limit: limit.toString(),
+      status,
+      depth,
     });
 
-    return await response.json();
+    let nextUrl = `${
+      this.baseUrl
+    }/wiki/api/v2/spaces/${spaceId}/pages?${queryParams.toString()}`;
+
+    while (hasMore) {
+      try {
+        const response = await fetch(nextUrl, {
+          method: "GET",
+          headers: this.defaultHeaders,
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `API error: ${response.status} ${response.statusText}`
+          );
+        }
+
+        const data = await response.json();
+
+        if (data.results) {
+          results.push(...data.results);
+        }
+
+        if (data._links?.next) {
+          nextUrl = `${this.baseUrl}${data._links.next}`;
+        } else if (data._links?.cursor) {
+          nextUrl = `${this.baseUrl}/wiki/api/v2/spaces/${spaceId}/pages?cursor=${data._links.cursor}`;
+        } else {
+          hasMore = false;
+        }
+      } catch (error) {
+        console.error(
+          `Error fetching pages for depth=${depth}:`,
+          error.message
+        );
+        return results;
+      }
+    }
+
+    return results;
   }
 
   async getPage(pageId) {
     const query = {
-      expand: "body.storage",
+      "body-format": "storage",
     };
 
     const params = new URLSearchParams(query);
 
-    const url = `${this.baseUrl}/wiki/rest/api/content/${pageId}?${params}`;
+    const url = `${this.baseUrl}/wiki/api/v2/pages/${pageId}?${params}`;
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
-    });
-
-    return await response.json();
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Failed to get page:", error);
+      throw error;
+    }
   }
 }
 

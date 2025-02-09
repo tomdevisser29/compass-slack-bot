@@ -30,12 +30,17 @@ class Float {
     });
 
     const url = `${this.baseUrl}/projects?${queryParams.toString()}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
-    });
 
-    return await response.json();
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Failed to get budget info:", error);
+      throw error;
+    }
   }
 
   async getProjects() {
@@ -51,12 +56,16 @@ class Float {
 
     const url = `${this.baseUrl}/projects?${queryParams.toString()}`;
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
-    });
-
-    return response.json();
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
+      return response.json();
+    } catch (error) {
+      console.error("Failed to get projects:", error);
+      throw error;
+    }
   }
 
   async getPeopleReport() {
@@ -72,22 +81,32 @@ class Float {
     const formattedEndDate = endDate.toISOString().split("T")[0];
 
     const url = `${this.baseUrl}/reports/people?start_date=${formattedStartDate}&end_date=${formattedEndDate}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
-    });
 
-    return response.json();
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
+      return response.json();
+    } catch (error) {
+      console.error("Failed to get people report:", error);
+      throw error;
+    }
   }
 
   async getPeople() {
     const url = `${this.baseUrl}/people`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
-    });
 
-    return response.json();
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
+      return response.json();
+    } catch (error) {
+      console.error("Failed to get people:", error);
+      throw error;
+    }
   }
 
   async fetchTasksByPersonId(personId, startDate, endDate) {
@@ -126,12 +145,17 @@ class Float {
     queryParams.set("fields", fields.join(","));
 
     const url = `${this.baseUrl}/tasks?${queryParams.toString()}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
-    });
 
-    return await response.json();
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Failed to fetch tasks by person id:", error);
+      throw error;
+    }
   }
 
   async getProjectById(projectId) {
@@ -145,12 +169,17 @@ class Float {
     const url = `${
       this.baseUrl
     }/projects/${projectId}?${queryParams.toString()}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
-    });
 
-    return response.json();
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
+      return response.json();
+    } catch (error) {
+      console.error("Failed to get project by id:", error);
+      throw error;
+    }
   }
 
   async getTaskById(taskId) {
@@ -161,12 +190,17 @@ class Float {
     });
 
     const url = `${this.baseUrl}/tasks/${taskId}?${queryParams.toString()}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
-    });
 
-    return response.json();
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
+      return response.json();
+    } catch (error) {
+      console.error("Failed to get task by id:", error);
+      throw error;
+    }
   }
 
   async getPeopleById(personId) {
@@ -177,12 +211,17 @@ class Float {
     });
 
     const url = `${this.baseUrl}/people/${personId}?${queryParams.toString()}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
-    });
 
-    return response.json();
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
+      return response.json();
+    } catch (error) {
+      console.error("Failed to get people by id:", error);
+      throw error;
+    }
   }
 
   async getAccountById(personId) {
@@ -196,12 +235,16 @@ class Float {
       this.baseUrl
     }/accounts/${personId}?${queryParams.toString()}`;
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers: this.defaultHeaders,
-    });
-
-    return response.json();
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: this.defaultHeaders,
+      });
+      return response.json();
+    } catch (error) {
+      console.error("Failed to get account by id:", error);
+      throw error;
+    }
   }
 }
 

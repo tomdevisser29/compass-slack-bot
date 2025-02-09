@@ -8,6 +8,7 @@ const { Assistant } = require("@slack/bolt");
 const blockKitBuilder = require("./classes/utilities/BlockKitBuilder");
 const intentionHandler = require("./classes/utilities/IntentionHandler");
 const openai = require("./classes/apis/OpenAI");
+const pinecone = require("./classes/apis/Pinecone");
 const {
   COMPASS_BRIEFING,
   FIRST_SUGGESTED_PROMPTS,
@@ -110,6 +111,30 @@ const compass = new Assistant({
         }));
 
         prompts.push(userMessage);
+
+        const embeddingResponse = await openai.createEmbedding({
+          text: text,
+        });
+
+        const index = await pinecone.getIndex("kompas-index");
+        const searchResults = await index.query({
+          vector: embeddingResponse,
+          topK: 4,
+          includeMetadata: true,
+        });
+
+        const pineconeResults = searchResults.matches;
+
+        if (pineconeResults.length > 0) {
+          context = "Hier is wat ik heb gevonden:\n";
+          pineconeResults.forEach((result, index) => {
+            context += `*Resultaat ${index + 1}:*\nTitle: ${
+              result.metadata.title
+            }\nContent: ${result.metadata.content}\n\n`;
+          });
+        }
+
+        prompts.push({ role: "system", content: context });
       }
 
       const messages = [
